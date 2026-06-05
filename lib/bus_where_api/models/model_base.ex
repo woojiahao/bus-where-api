@@ -4,6 +4,8 @@ defmodule BusWhereApi.Models.ModelBase do
   defmacro __using__(_opts) do
     quote do
       @behaviour BusWhereApi.Models.ModelBase
+
+      @derive {Jason.Encoder, []}
     end
   end
 end
