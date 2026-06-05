@@ -18,6 +18,16 @@ defmodule BusWhereApi.Models.ModelBase do
     fields = Module.get_attribute(env.module, :fields) || []
     enums = Module.get_attribute(env.module, :enums) || []
 
+    field_names =
+      Enum.map(fields, fn {field, _type, _key, opts} ->
+        {field, Keyword.get(opts, :default)}
+      end)
+
+    enum_names =
+      Enum.map(enums, fn {field, _mapping, _key, opts} ->
+        {field, Keyword.get(opts, :default)}
+      end)
+
     field_types =
       Enum.map(fields, fn {field, type, _key, _opts} ->
         {field, BusWhereApi.Models.ModelBase.type_spec(type)}
@@ -39,6 +49,8 @@ defmodule BusWhereApi.Models.ModelBase do
     escaped_enums = Macro.escape(enums)
 
     quote do
+      defstruct unquote(field_names ++ enum_names)
+
       def from_body(body) when is_map(body) do
         non_enum_fields =
           Enum.reduce(unquote(escaped_fields), %__MODULE__{}, fn {field, type, key, opts}, acc ->
