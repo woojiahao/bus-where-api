@@ -11,6 +11,7 @@ defmodule BusWhereApi.Application do
       BusWhereApiWeb.Telemetry,
       {DNSCluster, query: Application.get_env(:bus_where_api, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: BusWhereApi.PubSub},
+      {Cachex, [:lta_cache]},
       # Start a worker by calling: BusWhereApi.Worker.start_link(arg)
       # {BusWhereApi.Worker, arg},
       # Start to serve requests, typically the last entry
