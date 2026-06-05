@@ -4,19 +4,6 @@ defmodule BusWhereApi.Models.BusArrival do
   defmodule Bus do
     use BusWhereApi.Models.ModelBase
 
-    defstruct [
-      :origin_code,
-      :destination_code,
-      :estimated_arrival,
-      :monitored,
-      :latitude,
-      :longitude,
-      :visit_number,
-      :load,
-      :feature,
-      :type
-    ]
-
     field(:origin_code, :integer, "OriginCode", default: "0")
     field(:destination_code, :integer, "DestinationCode", default: "0")
 
@@ -55,8 +42,6 @@ defmodule BusWhereApi.Models.BusArrival do
       default: "SD"
     )
   end
-
-  defstruct [:service_no, :operator, :next_bus_1, :next_bus_2, :next_bus_3]
 
   field(:service_no, :string, "ServiceNo", default: "")
 
