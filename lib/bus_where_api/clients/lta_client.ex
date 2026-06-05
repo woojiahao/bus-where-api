@@ -27,16 +27,22 @@ defmodule BusWhereApi.Clients.LtaClient do
 
   @spec get_all(
           String.t(),
+          map(),
+          String.t(),
           integer(),
           list(map())
         ) :: list(map()) | {:error, term()}
-  def get_all(path, skip \\ 0, acc \\ []) do
-    case get("#{path}?$skip=#{skip}") do
-      {:ok, %{status_code: 200, body: %{"value" => []}}} ->
+  def get_all(path, path_parameters \\ %{}, list_key \\ "value", skip \\ 0, acc \\ []) do
+    path_parameters = Map.put(path_parameters, "$skip", skip)
+
+    full_path = create_path(path, path_parameters)
+
+    case get(full_path) do
+      {:ok, %{status_code: 200, body: %{^list_key => []}}} ->
         acc
 
-      {:ok, %{status_code: 200, body: %{"value" => value}}} ->
-        get_all(path, skip + 500, Enum.concat(acc, value))
+      {:ok, %{status_code: 200, body: %{^list_key => value}}} ->
+        get_all(path, path_parameters, list_key, skip + 500, Enum.concat(acc, value))
 
       {:ok, %{status_code: _}} ->
         {:error, :bad_request}
@@ -45,4 +51,15 @@ defmodule BusWhereApi.Clients.LtaClient do
         {:error, err}
     end
   end
+
+  @spec create_path(String.t(), map()) :: String.t()
+  def create_path(path, path_parameters) when map_size(path_parameters) == 0, do: path
+
+  def create_path(path, path_parameters),
+    do:
+      path <>
+        "?" <>
+        (path_parameters
+         |> Enum.map(fn {k, v} -> "#{k}=#{v}" end)
+         |> Enum.join("&"))
 end
