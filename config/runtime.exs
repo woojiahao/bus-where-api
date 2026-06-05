@@ -1,4 +1,10 @@
 import Config
+import Nvir
+
+dotenv!(
+  dev: ".env",
+  test: ".env"
+)
 
 # config/runtime.exs is executed for all environments, including
 # during releases. It is executed after compilation and before the
@@ -23,6 +29,8 @@ end
 config :bus_where_api, BusWhereApiWeb.Endpoint,
   http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
+config :bus_where_api, lta_account_key: env!("LTA_ACCOUNT_KEY")
+
 if config_env() == :prod do
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you
@@ -38,7 +46,8 @@ if config_env() == :prod do
 
   host = System.get_env("PHX_HOST") || "example.com"
 
-  config :bus_where_api, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
+  config :bus_where_api,
+    dns_cluster_query: System.get_env("DNS_CLUSTER_QUERY")
 
   config :bus_where_api, BusWhereApiWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],
