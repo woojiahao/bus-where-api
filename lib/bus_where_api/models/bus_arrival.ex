@@ -4,7 +4,6 @@ defmodule BusWhereApi.Models.BusArrival do
   defmodule Bus do
     use BusWhereApi.Models.ModelBase
 
-    @derive {Jason.Encoder, []}
     defstruct [
       :origin_code,
       :destination_code,
@@ -52,7 +51,12 @@ defmodule BusWhereApi.Models.BusArrival do
       %__MODULE__{
         origin_code: filled_body["OriginCode"] |> String.to_integer(),
         destination_code: filled_body["DestinationCode"] |> String.to_integer(),
-        estimated_arrival: filled_body["EstimatedArrival"] |> DateTime.from_iso8601(),
+        estimated_arrival:
+          filled_body["EstimatedArrival"]
+          |> DateTime.from_iso8601()
+          |> elem(1)
+          # the API always returns in UTC+8
+          |> DateTime.add(8 * 3600),
         monitored:
           case filled_body["Monitored"] do
             0 -> :schedule
@@ -82,7 +86,6 @@ defmodule BusWhereApi.Models.BusArrival do
     end
   end
 
-  @derive {Jason.Encoder, []}
   defstruct [:service_no, :operator, :next_bus_1, :next_bus_2, :next_bus_3]
 
   @type t :: %__MODULE__{
