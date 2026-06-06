@@ -29,7 +29,9 @@ defmodule BusWhereApiWeb.LtaController do
   end
 
   def bus_routes(conn, _params) do
-    bus_routes = BusWhereApi.Services.LtaService.bus_routes()
-    json(conn, bus_routes)
+    case BusWhereApi.Services.LtaService.bus_routes() do
+      {:error, err} -> {:error, err}
+      routes -> json(conn, routes)
+    end
   end
 end
