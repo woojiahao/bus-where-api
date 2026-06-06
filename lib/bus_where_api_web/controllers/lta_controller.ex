@@ -34,4 +34,11 @@ defmodule BusWhereApiWeb.LtaController do
       routes -> json(conn, routes)
     end
   end
+
+  def bus_stops(conn, params) do
+    case BusWhereApi.Services.LtaService.bus_stops(Map.get(params, "bus_stop_code")) do
+      {:error, err} -> {:error, err}
+      routes -> json(conn, routes)
+    end
+  end
 end
