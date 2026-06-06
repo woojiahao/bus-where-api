@@ -53,9 +53,12 @@ defmodule BusWhereApi.Clients.LtaClient do
   end
 
   @spec create_path(String.t(), map()) :: String.t()
-  def create_path(path, path_parameters) when map_size(path_parameters) == 0, do: path
-
   def create_path(path, path_parameters),
+    do: create_path_inner(path, Enum.reject(path_parameters, fn {_, v} -> is_nil(v) end))
+
+  defp create_path_inner(path, path_parameters) when map_size(path_parameters) == 0, do: path
+
+  defp create_path_inner(path, path_parameters),
     do:
       path <>
         "?" <>
