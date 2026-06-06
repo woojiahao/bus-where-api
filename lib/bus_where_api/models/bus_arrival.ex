@@ -38,7 +38,7 @@ defmodule BusWhereApi.Models.BusArrival do
         "DD" => :double_deck,
         "BD" => :bendy
       },
-      "Feature",
+      "Type",
       default: "SD"
     )
   end
