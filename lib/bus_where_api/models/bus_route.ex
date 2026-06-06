@@ -17,7 +17,7 @@ defmodule BusWhereApi.Models.BusRoute do
 
   field(:direction, :integer, "Direction", default: 0)
   field(:stop_sequence, :integer, "StopSequence", default: 0)
-  field(:bus_stop_code, :integer, "BusStoCode", default: 0)
+  field(:bus_stop_code, :integer, "BusStopCode", default: 0)
   field(:distance, :float, "Distance", default: 0.0)
   field(:weekday_first_bus, :integer, "WD_FirstBus", default: "2025")
   field(:weekday_last_bus, :integer, "WD_LastBus", default: "2025")
