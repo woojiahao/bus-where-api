@@ -8,8 +8,11 @@ defmodule BusWhereApiWeb.Router do
   scope "/api", BusWhereApiWeb do
     pipe_through :api
 
-    get "/bus_arrival", LtaController, :bus_arrival
-    get "/bus_services", LtaController, :bus_services
-    get "/bus_routes", LtaController, :bus_routes
+    scope "/bus" do
+      get "/arrival", LtaController, :bus_arrival
+      get "/services", LtaController, :bus_services
+      get "/routes", LtaController, :bus_routes
+      get "/stops", LtaController, :bus_stops
+    end
   end
 end
