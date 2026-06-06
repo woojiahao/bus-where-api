@@ -11,16 +11,24 @@ defmodule BusWhereApi.Services.LtaService do
            %{"BusStopCode" => bus_stop_code, "ServiceNo" => service_no},
            20
          ) do
-      {:error, err} -> {:error, err}
-      %{"Services" => arrivals} -> Enum.map(arrivals, &Models.BusArrival.from_body/1)
-      _ -> {:error, BusWhereApi.Error.not_found("Arrival information could not be found")}
+      {:error, err} ->
+        {:error, err}
+
+      %{"Services" => []} ->
+        {:error, BusWhereApi.Error.not_found("Arrival information could not be found")}
+
+      %{"Services" => arrivals} ->
+        Enum.map(arrivals, &Models.BusArrival.from_body/1)
+
+      _ ->
+        {:error, BusWhereApi.Error.not_found("Arrival information could not be found")}
     end
   end
 
   @spec bus_services(String.t() | nil) ::
           list(Models.BusService.t()) | {:error, BusWhereApi.Error.t()}
   def bus_services(service_no \\ nil) do
-    case cache_fetch_all("BusServices", "value", %{"ServiceNo" => service_no}, 60) do
+    case cache_fetch_all("BusServices", %{"ServiceNo" => service_no}) do
       {:error, err} -> {:error, err}
       services -> Enum.map(services, &Models.BusService.from_body/1)
     end
@@ -34,12 +42,20 @@ defmodule BusWhereApi.Services.LtaService do
     end
   end
 
-  @spec cache_fetch_all(String.t(), String.t(), map(), integer()) ::
+  @spec bus_stops(integer() | nil) :: list(Models.BusStop.t()) | {:error, BusWhereApi.Error.t()}
+  def bus_stops(bus_stop_code \\ nil) do
+    case cache_fetch_all("BusStops", %{"BusStopCode" => bus_stop_code}) do
+      {:error, err} -> {:error, err}
+      bus_stops -> Enum.map(bus_stops, &Models.BusStop.from_body/1)
+    end
+  end
+
+  @spec cache_fetch_all(String.t(), map(), String.t(), integer()) ::
           list(map()) | {:error, BusWhereApi.Error.t()}
   defp cache_fetch_all(
          path,
-         list_key \\ "value",
          path_parameters \\ %{},
+         list_key \\ "value",
          cache_duration_seconds \\ @cache_ttl_minutes * 60
        ) do
     cache_key = {path, path_parameters}
