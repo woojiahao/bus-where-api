@@ -6,6 +6,7 @@ defmodule BusWhereApi.Models.ModelBase do
       @derive {Jason.Encoder, []}
 
       import BusWhereApi.Models.ModelBase
+      alias BusWhereApi.Models.Helpers
 
       Module.register_attribute(__MODULE__, :fields, accumulate: true)
       Module.register_attribute(__MODULE__, :enums, accumulate: true)
@@ -30,12 +31,12 @@ defmodule BusWhereApi.Models.ModelBase do
 
     field_types =
       Enum.map(fields, fn {field, type, _key, _opts} ->
-        {field, BusWhereApi.Models.ModelBase.type_spec(type)}
+        {field, type_spec(type)}
       end)
 
     enum_types =
       Enum.map(enums, fn {field, mapping, _key, _opts} ->
-        {field, BusWhereApi.Models.ModelBase.enum_type_spec(mapping)}
+        {field, enum_type_spec(mapping)}
       end)
 
     struct_type =
@@ -60,7 +61,7 @@ defmodule BusWhereApi.Models.ModelBase do
                 v -> v
               end
 
-            value = BusWhereApi.Models.ModelBase.parse(type, raw_value, opts)
+            value = parse(type, raw_value, opts)
 
             Map.put(acc, field, value)
           end)
@@ -73,7 +74,7 @@ defmodule BusWhereApi.Models.ModelBase do
               v -> v
             end
 
-          value = BusWhereApi.Models.ModelBase.parse(:enum, raw_value, mapping, opts)
+          value = parse(:enum, raw_value, mapping, opts)
 
           Map.put(acc, field, value)
         end)
@@ -87,12 +88,21 @@ defmodule BusWhereApi.Models.ModelBase do
     end
   end
 
+  @spec field(
+          atom(),
+          :integer | :float | :string | :datetime | :bool | {:struct, module()},
+          String.t() | nil,
+          default: any(),
+          offset_s: integer(),
+          parser: any :: any
+        ) :: Macro.t()
   defmacro field(name, type, key \\ nil, opts \\ []) do
     quote do
       @fields {unquote(name), unquote(type), unquote(key || to_string(name)), unquote(opts)}
     end
   end
 
+  @spec enum(atom(), %{any() => atom()}, String.t() | nil, default: any()) :: Macro.t()
   defmacro enum(name, mapping, key \\ nil, opts \\ []) do
     quote do
       unless is_map(unquote(mapping)) do
@@ -104,19 +114,27 @@ defmodule BusWhereApi.Models.ModelBase do
   end
 
   def parse(:integer, nil, _), do: nil
-  def parse(:integer, v, _), do: String.to_integer(v)
+  def parse(:integer, v, _) when is_binary(v), do: String.to_integer(v)
+  def parse(:integer, v, _), do: v
 
   def parse(:float, nil, _), do: nil
   def parse(:float, v, _), do: String.to_float(v)
 
-  def parse(:string, v, _), do: v
+  def parse(:string, v, opts) do
+    case Keyword.get(opts, :parser) do
+      nil -> v
+      parser -> parser.(v)
+    end
+  end
 
   def parse(:datetime, nil, _), do: nil
 
-  def parse(:datetime, v, offset_s: offset_s),
-    do: parse(:datetime, v, offset_s: offset_s) |> DateTime.add(offset_s)
-
-  def parse(:datetime, v, _), do: DateTime.from_iso8601(v) |> elem(1)
+  def parse(:datetime, v, opts) do
+    case Keyword.get(opts, :offset_s) do
+      nil -> DateTime.from_iso8601(v) |> elem(1)
+      offset_s -> DateTime.from_iso8601(v) |> elem(1) |> DateTime.add(offset_s)
+    end
+  end
 
   def parse(:bool, 1, _), do: true
   def parse(:bool, 0, _), do: false
