@@ -1,7 +1,9 @@
 defmodule BusWhereApi.Services.LtaService do
   alias BusWhereApi.Models
 
-  @cache_ttl_minutes 60
+  # Given that the data is unlikely to keep changing, we can hold the cache for longer 
+  # to avoid long roundtrips for the enduser
+  @cache_ttl_minutes 24 * 60
 
   @spec bus_arrival(integer(), String.t() | nil) ::
           list(Models.BusArrival.t()) | {:error, BusWhereApi.Error.t()}
@@ -36,7 +38,7 @@ defmodule BusWhereApi.Services.LtaService do
 
   @spec bus_routes() :: list(Models.BusRoute.t()) | {:error, BusWhereApi.Error.t()}
   def bus_routes do
-    case cache_fetch_all("BusRoutes") do
+    case cache_fetch_all("BusRoutes", %{}) do
       {:error, err} -> {:error, err}
       routes -> Enum.map(routes, &Models.BusRoute.from_body/1)
     end
@@ -50,13 +52,13 @@ defmodule BusWhereApi.Services.LtaService do
     end
   end
 
-  @spec cache_fetch_all(String.t(), map(), String.t(), integer()) ::
+  @spec cache_fetch_all(String.t(), map(), integer(), String.t()) ::
           list(map()) | {:error, BusWhereApi.Error.t()}
   defp cache_fetch_all(
          path,
          path_parameters \\ %{},
-         list_key \\ "value",
-         cache_duration_seconds \\ @cache_ttl_minutes * 60
+         cache_duration_seconds \\ @cache_ttl_minutes * 60,
+         list_key \\ "value"
        ) do
     cache_key = {path, path_parameters}
 
