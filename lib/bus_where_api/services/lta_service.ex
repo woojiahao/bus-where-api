@@ -26,11 +26,11 @@ defmodule BusWhereApi.Services.LtaService do
     end
   end
 
-  @spec bus_routes() :: list(BusWhereApi.Models.BusStop) | {:error, BusWhereApi.Error.t()}
+  @spec bus_routes() :: list(Models.BusRoute.t()) | {:error, BusWhereApi.Error.t()}
   def bus_routes do
     case cache_fetch_all("BusRoutes") do
       {:error, err} -> {:error, err}
-      routes -> Enum.map(routes, &BusWhereApi.Models.BusStop.from_body/1)
+      routes -> Enum.map(routes, &Models.BusRoute.from_body/1)
     end
   end
 
