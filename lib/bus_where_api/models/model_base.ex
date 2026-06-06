@@ -114,11 +114,28 @@ defmodule BusWhereApi.Models.ModelBase do
   end
 
   def parse(:integer, nil, _), do: nil
-  def parse(:integer, v, _) when is_binary(v), do: String.to_integer(v)
-  def parse(:integer, v, _), do: v
+
+  def parse(:integer, v, _) when is_binary(v) do
+    case(Integer.parse(v)) do
+      :error -> nil
+      {i, _} -> i
+    end
+  end
+
+  def parse(:integer, v, _) when is_integer(v) or is_float(v), do: v
+  def parse(:integer, _, _), do: nil
 
   def parse(:float, nil, _), do: nil
-  def parse(:float, v, _), do: String.to_float(v)
+
+  def parse(:float, v, _) when is_binary(v) do
+    case(Float.parse(v)) do
+      :error -> nil
+      {i, _} -> i
+    end
+  end
+
+  def parse(:float, v, _) when is_integer(v) or is_float(v), do: v
+  def parse(:float, _, _), do: nil
 
   def parse(:string, v, opts) do
     case Keyword.get(opts, :parser) do
