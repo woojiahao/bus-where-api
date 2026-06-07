@@ -62,26 +62,27 @@ defmodule BusWhereApi.Services.LtaService do
        ) do
     cache_key = {path, path_parameters}
 
-    case Cachex.exists?(:lta_cache, cache_key) do
-      {:ok, true} ->
-        {:ok, models} = Cachex.get(:lta_cache, cache_key)
-        models
+    fetch_and_cache_api = fn ->
+      case BusWhereApi.Clients.LtaClient.get_all(path, path_parameters, list_key) do
+        {:error, err} ->
+          {:error, BusWhereApi.Error.external_failure(err)}
 
-      {:ok, false} ->
-        case BusWhereApi.Clients.LtaClient.get_all(path, path_parameters, list_key) do
-          {:error, err} ->
-            {:error, BusWhereApi.Error.external_failure(err)}
+        models ->
+          Cachex.put(
+            :lta_cache,
+            cache_key,
+            models,
+            ttl: :timer.seconds(cache_duration_seconds)
+          )
 
-          models ->
-            Cachex.put(
-              :lta_cache,
-              cache_key,
-              models,
-              ttl: :timer.seconds(cache_duration_seconds)
-            )
+          models
+      end
+    end
 
-            models
-        end
+    case Cachex.get(:lta_cache, cache_key) do
+      {:ok, nil} -> fetch_and_cache_api.()
+      {:ok, models} -> models
+      _ -> fetch_and_cache_api.()
     end
   end
 
@@ -93,29 +94,28 @@ defmodule BusWhereApi.Services.LtaService do
        ) do
     cache_key = {path, path_parameters}
 
-    case Cachex.exists?(:lta_cache, cache_key) do
-      {:ok, true} ->
-        {:ok, models} = Cachex.get(:lta_cache, cache_key)
-        models
+    fetch_and_cache_api = fn ->
+      full_path =
+        BusWhereApi.Clients.LtaClient.create_path(path, path_parameters)
 
-      {:ok, false} ->
-        full_path =
-          BusWhereApi.Clients.LtaClient.create_path(path, path_parameters)
+      case BusWhereApi.Clients.LtaClient.get(full_path) do
+        {:error, err} ->
+          {:error, BusWhereApi.Error.external_failure(err)}
 
-        case BusWhereApi.Clients.LtaClient.get(full_path) do
-          {:error, err} ->
-            {:error, BusWhereApi.Error.external_failure(err)}
+        {:ok, %{body: body}} ->
+          Cachex.put(
+            :lta_cache,
+            cache_key,
+            body,
+            ttl: :timer.seconds(cache_duration_seconds)
+          )
+      end
+    end
 
-          {:ok, %{body: body}} ->
-            Cachex.put(
-              :lta_cache,
-              cache_key,
-              body,
-              ttl: :timer.seconds(cache_duration_seconds)
-            )
-
-            body
-        end
+    case Cachex.get(:lta_cache, cache_key) do
+      {:ok, nil} -> fetch_and_cache_api.()
+      {:ok, cached_body} -> cached_body
+      _ -> fetch_and_cache_api.()
     end
   end
 end
