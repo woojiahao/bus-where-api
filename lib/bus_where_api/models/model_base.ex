@@ -147,9 +147,15 @@ defmodule BusWhereApi.Models.ModelBase do
   def parse(:datetime, nil, _), do: nil
 
   def parse(:datetime, v, opts) do
-    case Keyword.get(opts, :offset_s) do
-      nil -> DateTime.from_iso8601(v) |> elem(1)
-      offset_s -> DateTime.from_iso8601(v) |> elem(1) |> DateTime.add(offset_s)
+    case DateTime.from_iso8601(v) do
+      {:ok, time, _} ->
+        case Keyword.get(opts, :offset_s) do
+          nil -> time
+          offset_s -> DateTime.add(time, offset_s)
+        end
+
+      {:error, _} ->
+        nil
     end
   end
 
