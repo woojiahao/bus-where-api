@@ -11,7 +11,7 @@ defmodule BusWhereApi.Services.LtaService do
     case cache_fetch(
            "v3/BusArrival",
            %{"BusStopCode" => bus_stop_code, "ServiceNo" => service_no},
-           20
+           15
          ) do
       {:error, err} ->
         {:error, err}
@@ -72,7 +72,7 @@ defmodule BusWhereApi.Services.LtaService do
             :lta_cache,
             cache_key,
             models,
-            ttl: :timer.seconds(cache_duration_seconds)
+            expire: :timer.seconds(cache_duration_seconds)
           )
 
           models
@@ -107,8 +107,10 @@ defmodule BusWhereApi.Services.LtaService do
             :lta_cache,
             cache_key,
             body,
-            ttl: :timer.seconds(cache_duration_seconds)
+            expire: :timer.seconds(cache_duration_seconds)
           )
+
+          body
       end
     end
 
